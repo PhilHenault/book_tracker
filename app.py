@@ -3,6 +3,8 @@ import config
 from pymongo import MongoClient
 from bson.json_util import loads
 import json
+from bson import json_util
+import json
 
 client = MongoClient('localhost', 27017)
 db = client[config.db_name]
@@ -15,25 +17,18 @@ app = Flask(__name__)
 def index():
 	return "Welcome to API!"
 
-
-#takes in a list or single element and restructures data by removing the "_id" key to make the response more readable
-def restructure_data(data, is_list = True):
-	
-	#handle if list
+#handles the conversion of objectIDs to strings
+def objectId_handler(results, is_list = True):
+	#if list, iterate through and fix all
 	if is_list:
-		to_return = []
-		#iterate through 
-		for item in data:
-			#delete "_id" for each
-			del item["_id"]
-			#re add the element in order to return it 
-			to_return.append(item)
-		return to_return
-
-	#if not a list
+		for res in results:
+			#convert ID to string
+			res["_id"] = str(res["_id"])
+		return results
+	#not a list, convert object ID to strnig
 	else:
-		del data["_id"]
-		return data
+		results["_id"] = str(results["_id"])
+		return results
 
 	
 #custom error handler to create own error response 
@@ -51,8 +46,9 @@ def not_found(error):
 #route to handle get requests for getting all books
 @app.route('/book_keeper/api/books', methods = ['GET'])
 def get_books():
-	#query the collection and restructure books
-	books_response = restructure_data(list(books.find({})))
+	#query the collection and handle conversion of IDs to strings
+	books_response = objectId_handler(list(books.find({})))
+
 	#convert to json response format and return 
 	return jsonify({"books": books_response})
 
@@ -76,9 +72,9 @@ def get_book(book_id):
 		abort(404)
 
 	#restructure data to remove "_id"
-	book_response = restructure_data(book, False)
+	# book_response = restructure_data(book, False)
 	#convert to json response format and return 
-	return jsonify({"book": book_response})
+	return jsonify({"book": book})
 		
 
 if __name__ == '__main__':
