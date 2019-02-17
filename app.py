@@ -1,9 +1,9 @@
 from flask import Flask, jsonify, abort, make_response
 import config
 from pymongo import MongoClient
-from bson.json_util import loads
+
 import json
-from bson import json_util
+from bson import ObjectId
 import json
 
 client = MongoClient('localhost', 27017)
@@ -53,26 +53,26 @@ def get_books():
 	return jsonify({"books": books_response})
 
 
-#route to handle getting single book based on book id
+#route to handle getting single book based on id
 @app.route('/book_keeper/api/book/<book_id>', methods = ['GET'])
 def get_book(book_id):
 
-	#if book id is not a numeric value return error
+	#check if valid ObjectID, if not return error
 	try:
-		book_id = int(book_id)
+		find_id = ObjectId(book_id)
 	except:
 		abort(400)
 
-
-	#if book id is numeric, do lookup for it
-	book = books.find_one({"book_id" : int(book_id)})
+	#if book id is potential objectID, do lookup for it
+	book = books.find_one({"_id" : find_id})
 	
 	#no books found, return resource not found error 
 	if book is None:
 		abort(404)
 
-	#restructure data to remove "_id"
-	# book_response = restructure_data(book, False)
+	#convert ObjectID to a readable string 
+	book = objectId_handler(book, False)
+
 	#convert to json response format and return 
 	return jsonify({"book": book})
 		
