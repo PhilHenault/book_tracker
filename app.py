@@ -1,10 +1,14 @@
-from flask import Flask, jsonify, abort, make_response
+from flask import Flask, jsonify, abort, make_response, request, url_for, g
 import config
 from pymongo import MongoClient
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import timezone, datetime
+from flask_httpauth import HTTPBasicAuth
+import json
+import bson
+from pprint import pprint
 
-import json
-from bson import ObjectId
-import json
+auth = HTTPBasicAuth()
 
 client = MongoClient('localhost', 27017)
 db = client[config.db_name]
@@ -12,10 +16,86 @@ books = db[config.book_collection]
 
 app = Flask(__name__)
 
+#custom error handler to create own error response 
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'Error': 'Not Found'}), 404)
+
+
+#custom error handler to create own error response 
+@app.errorhandler(400)
+def invalid_req(error):
+    return make_response(jsonify({'Error': 'Invalid Request'}), 400)
+
+#custom error handler to create own error response
+@auth.error_handler
+def unauthorized():
+    # return error
+    return make_response(jsonify({'error': 'Unauthorized access'}), 403)
+
 #index route that currently does nothing and just shows message
 @app.route('/')
 def index():
 	return "Welcome to API!"
+
+@app.route('/book_keeper/api/user', methods = ['POST'])
+def register():
+
+	#get username and password user gives
+	username = request.json.get('username')
+	password = request.json.get('password')
+
+	#if data missing from json, return error
+	if not request.json or username is None or password is None:
+		abort(400)
+
+	#if user already exists, return error 
+	if books.find_one({"username" : username}) is not None:
+		abort(400)
+
+	#create password hash for users password
+	hash_password = generate_password_hash(password)
+
+	#user id is based on unix timestamp
+	u_id = int(datetime.now().timestamp() * 1000)
+
+	#insert user into db with no books
+	books.insert_one({"_id" : u_id, "username" : username, "password" : hash_password, "books" : []})
+
+	#return json with username that was registered, 201 success code, and header pointing to get_user
+	return jsonify({ 'username': username }), 201, {'Location': url_for('get_user', username = username, _external = True)}
+
+
+#get user based on username 
+@app.route('/book_keeper/api/user/<string:username>')
+def get_user(username):
+	#look up based on username 
+    user = books.find_one({"username" : username})
+
+    #if no user, return error 
+    if not user:
+        abort(404)
+
+    #create response to return after request
+    user_response = {'username': user['username'], 'id': user['_id'], 'total_books': len(user['books']) }
+
+    #return json with username
+    return jsonify(user_response)
+
+
+#check for valid auth password
+@auth.verify_password
+def verify_password(username, password):
+	#look up user
+    user = books.find_one({"username" : username})
+
+    #if user not found or password doesn't match unhashed pass, return false
+    if not user or not check_password_hash(user['password'], password):
+        return False
+
+    #return true and set g.user to username 
+    g.user = user['username']
+    return True
 
 #handles the conversion of objectIDs to strings
 def objectId_handler(results, is_list = True):
@@ -30,51 +110,70 @@ def objectId_handler(results, is_list = True):
 		results["_id"] = str(results["_id"])
 		return results
 
-	
-#custom error handler to create own error response 
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'Error': 'Not Found'}), 404)
+#add a book to a user's list of books
+@app.route('/book_keeper/api/user/books', methods = ['POST'])
+@auth.login_required
+def post_book():
+	#get key values from json
+	name = request.json.get('name')
+	author = request.json.get('author')
+	pages = request.json.get('pages')
+	completed = request.json.get('completed')
 
+	#get authenticated users username
+	username = request.authorization.username
 
-#custom error handler to create own error response 
-@app.errorhandler(400)
-def not_found(error):
-    return make_response(jsonify({'Error': 'Invalid Request'}), 400)
-
-
-#route to handle get requests for getting all books
-@app.route('/book_keeper/api/books', methods = ['GET'])
-def get_books():
-	#query the collection and handle conversion of IDs to strings
-	books_response = objectId_handler(list(books.find({})))
-
-	#convert to json response format and return 
-	return jsonify({"books": books_response})
-
-
-#route to handle getting single book based on id
-@app.route('/book_keeper/api/book/<book_id>', methods = ['GET'])
-def get_book(book_id):
-
-	#check if valid ObjectID, if not return error
-	try:
-		find_id = ObjectId(book_id)
-	except:
+	#if not json or any of values none, return error
+	if not request.json or name is None or author is None or pages is None or completed is None:
 		abort(400)
 
-	#if book id is potential objectID, do lookup for it
-	book = books.find_one({"_id" : find_id})
-	
-	#no books found, return resource not found error 
-	if book is None:
+	#get json passed by user and add a unique id to book
+	book = request.json
+	book['book_id'] = str(bson.objectid.ObjectId())
+
+	#insert into users books list 
+	books.find_one_and_update({"username": username}, {"$push": {"books": book}}, upsert = True)
+	return jsonify({'book': book}), 201
+
+
+#route to handle get requests for getting all books for a user
+@app.route('/book_keeper/api/user/<string:username>/books', methods = ['GET'])
+def get_books(username):
+
+	#lookup user in DB based on username 
+	user_lookup = books.find_one({'username' : username})
+
+	if user_lookup is None:
 		abort(404)
 
-	#convert ObjectID to a readable string 
-	book = objectId_handler(book, False)
+	#get all user books
+	user_books = user_lookup['books']
 
 	#convert to json response format and return 
-	return jsonify({"book": book})
+	return jsonify({"books": user_books})
+
+
+#route to handle getting single book based on book id 
+@app.route('/book_keeper/api/user/book/<string:book_id>', methods = ['GET'])
+@auth.login_required
+def get_book(book_id):
+
+
+	#lookup to get authenticated users books
+	books_lookup = books.find_one({"username" : request.authorization.username})['books']
+	
+	#no books found, return resource not found error 
+	if books_lookup is None:
+		abort(404)
+
+	#iterate through user books
+	for book in books_lookup:
+		#if book id matches request id, return json formatted response
+		if book['book_id'] == book_id:
+			return jsonify({"book": book})
+
+	#nothing found, return error
+	abort(404)
 		
 
 if __name__ == '__main__':
