@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, abort, make_response, request, url_for, g
 import config
 from pymongo import MongoClient
+from pymongo.collection import ReturnDocument
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timezone, datetime
 from flask_httpauth import HTTPBasicAuth
@@ -31,7 +32,7 @@ def invalid_req(error):
 @auth.error_handler
 def unauthorized():
     # return error
-    return make_response(jsonify({'error': 'Unauthorized access'}), 403)
+    return make_response(jsonify({'error': 'Unauthorized Access'}), 403)
 
 #index route that currently does nothing and just shows message
 @app.route('/')
@@ -180,6 +181,24 @@ def update_book(book_id):
 
 	#return book that was updated
 	return jsonify({'book': book})
+
+
+
+#route to delete an authenticated users book based on ID
+@app.route('/book_keeper/api/user/book/<string:book_id>', methods = ['DELETE'])
+@auth.login_required
+def delete_book(book_id):
+	#look up desired book to see if it even exists so we can delete 
+	books_lookup = books.find_one({"$and": [{"username": request.authorization.username}, {"books.book_id" : book_id}]}, {"books.$" : 1})
+
+	#if it doesn't exist, return error
+	if books_lookup is None:
+		abort(404)
+
+	#does exist so find that specific book and delete the subdocument pertaining to doc 
+	delete = books.find_one_and_update({"username": request.authorization.username},{"$pull":{"books": {"book_id" : book_id}}}, upsert=False)
+	#return validation to user
+	return jsonify({'Delete': 'Success!'})
 
 
 #route to handle get requests for getting all books for a user
