@@ -160,20 +160,15 @@ def get_book(book_id):
 
 
 	#lookup to get authenticated users books
-	books_lookup = books.find_one({"username" : request.authorization.username})['books']
-	
+	books_lookup = books.find_one({"$and": [{"username": request.authorization.username}, {"books.book_id" : book_id}]}, {"books.$" : 1})
+
 	#no books found, return resource not found error 
 	if books_lookup is None:
 		abort(404)
 
-	#iterate through user books
-	for book in books_lookup:
-		#if book id matches request id, return json formatted response
-		if book['book_id'] == book_id:
-			return jsonify({"book": book})
+	#return book found 
+	return jsonify({"book": books_lookup['books'][0]})
 
-	#nothing found, return error
-	abort(404)
 		
 
 if __name__ == '__main__':
