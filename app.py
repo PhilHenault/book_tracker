@@ -140,10 +140,13 @@ def post_book():
 @auth.login_required
 def update_book(book_id):
 
+	#get json from request
 	book_mod = request.json
 
+	#checks on json, if not json error
 	if not request.json:
 	    abort(400)
+	#check for elements in the json and check for data type, return error 
 	if 'name' in book_mod and type(book_mod['name']) is not str:
 	    abort(400)
 	if 'author' in book_mod and type(book_mod['author']) is not str:
@@ -153,24 +156,29 @@ def update_book(book_id):
 	if 'completed' in book_mod and type(book_mod['completed']) is not bool:
 	    abort(400)
 
+	#get username from request
 	username = request.authorization.username
 
+	#lookup user and book id
 	books_lookup = books.find_one({"$and": [{"username": username}, {"books.book_id" : book_id}]}, {"books.$" : 1})
 
+	#if nothing found, return error
 	if books_lookup is None:
 		abort(404)
 
+	#getting actual book information 
 	book = books_lookup['books'][0]
 
+	#setting the book info based on json, if no new info, keep original value
 	book['name'] = book_mod.get('name', book['name'])
 	book['author'] = book_mod.get('author', book['author'])
 	book['pages'] = book_mod.get('pages', book['pages'])
 	book['completed'] = book_mod.get('completed', book['completed'])
 
-	pprint(book)
+	#find book by id and update with new json
+	put = books.find_one_and_update({"$and": [{"username": username}, {"books.book_id" : book_id}]}, {"$set": {"books.$": book}}, upsert = True)
 
-	res = books.find_one_and_update({"$and": [{"username": username}, {"books.book_id" : book_id}]}, {"$set": {"books.$": book}}, upsert = True)
-
+	#return book that was updated
 	return jsonify({'book': book})
 
 
