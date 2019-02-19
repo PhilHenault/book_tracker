@@ -136,6 +136,44 @@ def post_book():
 	return jsonify({'book': book}), 201
 
 
+@app.route('/book_keeper/api/user/book/<string:book_id>', methods = ['PUT'])
+@auth.login_required
+def update_book(book_id):
+
+	book_mod = request.json
+
+	if not request.json:
+	    abort(400)
+	if 'name' in book_mod and type(book_mod['name']) is not str:
+	    abort(400)
+	if 'author' in book_mod and type(book_mod['author']) is not str:
+	    abort(400)
+	if 'pages' in book_mod and type(book_mod['pages']) is not int:
+	    abort(400)
+	if 'completed' in book_mod and type(book_mod['completed']) is not bool:
+	    abort(400)
+
+	username = request.authorization.username
+
+	books_lookup = books.find_one({"$and": [{"username": username}, {"books.book_id" : book_id}]}, {"books.$" : 1})
+
+	if books_lookup is None:
+		abort(404)
+
+	book = books_lookup['books'][0]
+
+	book['name'] = book_mod.get('name', book['name'])
+	book['author'] = book_mod.get('author', book['author'])
+	book['pages'] = book_mod.get('pages', book['pages'])
+	book['completed'] = book_mod.get('completed', book['completed'])
+
+	pprint(book)
+
+	res = books.find_one_and_update({"$and": [{"username": username}, {"books.book_id" : book_id}]}, {"$set": {"books.$": book}}, upsert = True)
+
+	return jsonify({'book': book})
+
+
 #route to handle get requests for getting all books for a user
 @app.route('/book_keeper/api/user/<string:username>/books', methods = ['GET'])
 def get_books(username):
@@ -157,7 +195,6 @@ def get_books(username):
 @app.route('/book_keeper/api/user/book/<string:book_id>', methods = ['GET'])
 @auth.login_required
 def get_book(book_id):
-
 
 	#lookup to get authenticated users books
 	books_lookup = books.find_one({"$and": [{"username": request.authorization.username}, {"books.book_id" : book_id}]}, {"books.$" : 1})
