@@ -11,6 +11,8 @@ from pprint import pprint
 
 auth = HTTPBasicAuth()
 
+
+
 client = MongoClient('localhost', 27017)
 db = client[config.db_name]
 books = db[config.book_collection]
@@ -38,6 +40,7 @@ def unauthorized():
 @app.route('/')
 def index():
 	return "Welcome to API!"
+
 
 @app.route('/book_keeper/api/user', methods = ['POST'])
 def register():
@@ -233,8 +236,7 @@ def get_book(book_id):
 	#return book found 
 	return jsonify({"book": books_lookup['books'][0]})
 
-		
-
+	
 if __name__ == '__main__':
     app.secret_key = config.secret_key
 
