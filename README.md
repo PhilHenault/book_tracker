@@ -1,4 +1,4 @@
-# Book_Keeper
+# Book_Tracker
 Book_Tracker is an API developed using Python and the Flask microframework. Authenticated users can add books to their account, modify their status, retrieve information about them, and remove them. 
 
 ## Authentication
