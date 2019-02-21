@@ -43,8 +43,8 @@ POST http://localhost:5000/book_keeper/api/user/books
     {
         "name" : "sample_name",
         "author" : "sample_author",
-        "pages" : sample_pages,
-        "completed" : sample_completed
+        "pages" : "sample_pages (int)",
+        "completed" : "sample_completed (bool)"
     }
 ```
 
@@ -79,8 +79,8 @@ Authenticated user's must pass a unique book ID to update a book. This book ID c
     {
         "name" : "sample_name",
         "author" : "sample_author",
-        "pages" : sample_pages,
-        "completed" : sample_completed
+        "pages" : "sample_pages (int)",
+        "completed" : "sample_completed (bool)"
     }
 ```
 
