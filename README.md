@@ -1,15 +1,15 @@
 # Book_Keeper
-Book_Keeper is an API developed using Python and the Flask microframework. Authenticated users can add books to their account, modify their status, retrieve information about them, and remove them. 
+Book_Tracker is an API developed using Python and the Flask microframework. Authenticated users can add books to their account, modify their status, retrieve information about them, and remove them. 
 
 ## Authentication
 
-Book_Keeper makes use of Basic Authentication. To access most resources, a user must pass a username and password with the request. 
+Book_Tracker makes use of Basic Authentication. To access most resources, a user must pass a username and password with the request. 
 
 #### Register an Account
 This request allows a user to register an account in order to make authenticated requests to the API. 
 &NewLine;
 ```sh
-POST http://localhost:5000/book_keeper/api/user
+POST http://localhost:5000/book_tracker/api/user
 ```
 ```json
     {
@@ -21,7 +21,7 @@ In the request, pass along a JSON with the requested username and password.
 
 ##### Example
 ```sh
-curl -i -X POST -H "Content-Type: application/json" -d '{"username":"sample_username","password":"sample_password"}' http://localhost:5000/book_keeper/api/user
+curl -i -X POST -H "Content-Type: application/json" -d '{"username":"sample_username","password":"sample_password"}' http://localhost:5000/book_tracker/api/user
 ```
 
 #### Response
@@ -37,7 +37,7 @@ curl -i -X POST -H "Content-Type: application/json" -d '{"username":"sample_user
 This request allows an authenticated user to add a book to their account. 
 &NewLine;
 ```sh
-POST http://localhost:5000/book_keeper/api/user/books
+POST http://localhost:5000/book_tracker/api/user/books
 ```
 ```json
     {
@@ -51,7 +51,7 @@ POST http://localhost:5000/book_keeper/api/user/books
 Pass along a JSON of book details to add the book to a user's collection. 
 ##### Example
 ```sh
-curl -i -u username:password -X POST -H "Content-Type: application/json" -d '{'name:"sample_name",'author':'sample_author', 'pages': sample_pages, 'completed' : sample_completed}' http://localhost:5000/book_keeper/api/user/books
+curl -i -u username:password -X POST -H "Content-Type: application/json" -d '{'name:"sample_name",'author':'sample_author', 'pages': sample_pages, 'completed' : sample_completed}' http://localhost:5000/book_tracker/api/user/books
 ```
 #### Response
 ```json
@@ -70,7 +70,7 @@ curl -i -u username:password -X POST -H "Content-Type: application/json" -d '{'n
 This request allows an authenticated user to update an existing book in their collection. 
 &NewLine;
 ```sh
-PUT http://localhost:5000/book_keeper/api/user/book/<string:book_id>
+PUT http://localhost:5000/book_tracker/api/user/book/<string:book_id>
 ```
 
 Authenticated user's must pass a unique book ID to update a book. This book ID can be found through **Getting Completed Books**, **Getting Currently Reading**, or **Getting a User's Books**
@@ -87,7 +87,7 @@ Authenticated user's must pass a unique book ID to update a book. This book ID c
 Pass along a JSON of book details to update the existing book with new information.  
 ##### Example
 ```sh
-curl -i -u username:password -X PUT -H "Content-Type: application/json" -d '{'name:"sample_name",'author':'sample_author', 'pages': sample_pages, 'completed' : sample_completed}' http://localhost:5000/book_keeper/api/user/book/book_id
+curl -i -u username:password -X PUT -H "Content-Type: application/json" -d '{'name:"sample_name",'author':'sample_author', 'pages': sample_pages, 'completed' : sample_completed}' http://localhost:5000/book_tracker/api/user/book/book_id
 ```
 
 #### Response
@@ -107,14 +107,14 @@ curl -i -u username:password -X PUT -H "Content-Type: application/json" -d '{'na
 This request allows an authenticated user to delete an existing book from their collection. 
 &NewLine;
 ```sh
-DELETE http://localhost:5000/book_keeper/api/user/book/<string:book_id>
+DELETE http://localhost:5000/book_tracker/api/user/book/<string:book_id>
 ```
 
 Authenticated user's must pass a unique book ID to delete a book. This book ID can be found through **Getting Completed Books**, **Getting Currently Reading**, or **Getting a User's Books**
 
 ##### Example
 ```sh
-curl -i -u username:password -X DELETE -H "Content-Type: application/json"  http://localhost:5000/book_keeper/api/user/book/book_id
+curl -i -u username:password -X DELETE -H "Content-Type: application/json"  http://localhost:5000/book_tracker/api/user/book/book_id
 ```
 
 #### Response
@@ -129,14 +129,14 @@ curl -i -u username:password -X DELETE -H "Content-Type: application/json"  http
 This request allows an authenticated user to retrieve a book from their collection. 
 &NewLine;
 ```sh
-GET http://localhost:5000/book_keeper/api/user/book/<string:book_id>
+GET http://localhost:5000/book_tracker/api/user/book/<string:book_id>
 ```
 
 Authenticated user's must pass a unique book ID to retrieve a specific book. This book ID can be found through **Getting Completed Books**, **Getting Currently Reading**, or **Getting a User's Books**
 
 ##### Example
 ```sh
-curl -i -u username:password -X GET -H "Content-Type: application/json"  http://localhost:5000/book_keeper/api/user/book/book_id
+curl -i -u username:password -X GET -H "Content-Type: application/json"  http://localhost:5000/book_tracker/api/user/book/book_id
 ```
 
 #### Response
@@ -156,12 +156,12 @@ curl -i -u username:password -X GET -H "Content-Type: application/json"  http://
 This request allows an authenticated user to retrieve books that are marked as completed. 
 &NewLine;
 ```sh
-GET http://localhost:5000/book_keeper/api/user/books/completed
+GET http://localhost:5000/book_tracker/api/user/books/completed
 ```
 
 ##### Example
 ```sh
-curl -i -u username:password -X GET -H "Content-Type: application/json"  http://localhost:5000/book_keeper/api/user/books/completed
+curl -i -u username:password -X GET -H "Content-Type: application/json"  http://localhost:5000/book_tracker/api/user/books/completed
 ```
 
 #### Response
@@ -190,12 +190,12 @@ curl -i -u username:password -X GET -H "Content-Type: application/json"  http://
 This request allows an authenticated user to retrieve books that are marked as being read. 
 &NewLine;
 ```sh
-GET http://localhost:5000/book_keeper/api/user/books/reading
+GET http://localhost:5000/book_tracker/api/user/books/reading
 ```
 
 ##### Example
 ```sh
-curl -i -u username:password -X GET -H "Content-Type: application/json"  http://localhost:5000/book_keeper/api/user/books/reading
+curl -i -u username:password -X GET -H "Content-Type: application/json"  http://localhost:5000/book_tracker/api/user/books/reading
 ```
 
 #### Response
@@ -225,12 +225,12 @@ curl -i -u username:password -X GET -H "Content-Type: application/json"  http://
 This request allows an unauthenticated user to get information about a registered user.
 &NewLine;
 ```sh
-GET http://localhost:5000/book_keeper/api/user/<string:username>
+GET http://localhost:5000/book_tracker/api/user/<string:username>
 ```
 
 ##### Example
 ```sh
-curl -i -X GET -H "Content-Type: application/json"  http://localhost:5000/book_keeper/api/user/username_string
+curl -i -X GET -H "Content-Type: application/json"  http://localhost:5000/book_tracker/api/user/username_string
 ```
 
 #### Response
@@ -246,12 +246,12 @@ curl -i -X GET -H "Content-Type: application/json"  http://localhost:5000/book_k
 This request allows an unauthenticated user to get the books of a user.
 &NewLine;
 ```sh
-GET http://localhost:5000/book_keeper/api/user/<string:username>/books
+GET http://localhost:5000/book_tracker/api/user/<string:username>/books
 ```
 
 ##### Example
 ```sh
-curl -i -X GET -H "Content-Type: application/json"  http://localhost:5000/book_keeper/api/user/username_string/books
+curl -i -X GET -H "Content-Type: application/json"  http://localhost:5000/book_tracker/api/user/username_string/books
 ```
 
 #### Response
