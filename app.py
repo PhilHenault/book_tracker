@@ -42,7 +42,7 @@ def index():
 	return "Welcome to API!"
 
 
-@app.route('/book_keeper/api/user', methods = ['POST'])
+@app.route('/book_tracker/api/user', methods = ['POST'])
 def register():
 
 	#get username and password user gives
@@ -71,7 +71,7 @@ def register():
 
 
 #get user based on username 
-@app.route('/book_keeper/api/user/<string:username>', methods=['GET'])
+@app.route('/book_tracker/api/user/<string:username>', methods=['GET'])
 def get_user(username):
 	#look up based on username 
     user = books.find_one({"username" : username})
@@ -115,7 +115,7 @@ def objectId_handler(results, is_list = True):
 		return results
 
 #add a book to a user's list of books
-@app.route('/book_keeper/api/user/books', methods = ['POST'])
+@app.route('/book_tracker/api/user/books', methods = ['POST'])
 @auth.login_required
 def post_book():
 	#get key values from json
@@ -140,7 +140,7 @@ def post_book():
 	return jsonify({'book': book}), 201
 
 
-@app.route('/book_keeper/api/user/book/<string:book_id>', methods = ['PUT'])
+@app.route('/book_tracker/api/user/book/<string:book_id>', methods = ['PUT'])
 @auth.login_required
 def update_book(book_id):
 
@@ -188,7 +188,7 @@ def update_book(book_id):
 
 
 #route to delete an authenticated users book based on ID
-@app.route('/book_keeper/api/user/book/<string:book_id>', methods = ['DELETE'])
+@app.route('/book_tracker/api/user/book/<string:book_id>', methods = ['DELETE'])
 @auth.login_required
 def delete_book(book_id):
 	#look up desired book to see if it even exists so we can delete 
@@ -205,7 +205,7 @@ def delete_book(book_id):
 
 
 #route to handle get requests for getting all books for a user
-@app.route('/book_keeper/api/user/<string:username>/books', methods = ['GET'])
+@app.route('/book_tracker/api/user/<string:username>/books', methods = ['GET'])
 def get_books(username):
 
 	#lookup user in DB based on username 
@@ -222,7 +222,7 @@ def get_books(username):
 
 
 #route to handle getting single book based on book id 
-@app.route('/book_keeper/api/user/book/<string:book_id>', methods = ['GET'])
+@app.route('/book_tracker/api/user/book/<string:book_id>', methods = ['GET'])
 @auth.login_required
 def get_book(book_id):
 
@@ -237,7 +237,7 @@ def get_book(book_id):
 	return jsonify({"book": books_lookup['books'][0]})
 
 #route to handle returning all user books that are completed
-@app.route('/book_keeper/api/user/books/completed/', methods = ['GET'])
+@app.route('/book_tracker/api/user/books/completed/', methods = ['GET'])
 @auth.login_required
 def get_completed():
 
@@ -252,7 +252,7 @@ def get_completed():
 	return jsonify({'books': [book for book in books_lookup['books'] if book['completed'] == True]})
 
 #route to handle returning all user books that are in progress
-@app.route('/book_keeper/api/user/books/reading/', methods = ['GET'])
+@app.route('/book_tracker/api/user/books/reading/', methods = ['GET'])
 @auth.login_required
 def get_reading():
 
