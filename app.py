@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, abort, make_response, request, url_for, g
 import config
 from pymongo import MongoClient
+from pymongo.collection import ReturnDocument
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timezone, datetime
 from flask_httpauth import HTTPBasicAuth
@@ -33,7 +34,7 @@ def invalid_req(error):
 @auth.error_handler
 def unauthorized():
     # return error
-    return make_response(jsonify({'error': 'Unauthorized access'}), 403)
+    return make_response(jsonify({'error': 'Unauthorized Access'}), 403)
 
 #index route that currently does nothing and just shows message
 @app.route('/')
@@ -185,6 +186,24 @@ def update_book(book_id):
 	return jsonify({'book': book})
 
 
+
+#route to delete an authenticated users book based on ID
+@app.route('/book_keeper/api/user/book/<string:book_id>', methods = ['DELETE'])
+@auth.login_required
+def delete_book(book_id):
+	#look up desired book to see if it even exists so we can delete 
+	books_lookup = books.find_one({"$and": [{"username": request.authorization.username}, {"books.book_id" : book_id}]}, {"books.$" : 1})
+
+	#if it doesn't exist, return error
+	if books_lookup is None:
+		abort(404)
+
+	#does exist so find that specific book and delete the subdocument pertaining to doc 
+	delete = books.find_one_and_update({"username": request.authorization.username},{"$pull":{"books": {"book_id" : book_id}}}, upsert=False)
+	#return validation to user
+	return jsonify({'Delete': 'Success!'})
+
+
 #route to handle get requests for getting all books for a user
 @app.route('/book_keeper/api/user/<string:username>/books', methods = ['GET'])
 def get_books(username):
@@ -216,6 +235,37 @@ def get_book(book_id):
 
 	#return book found 
 	return jsonify({"book": books_lookup['books'][0]})
+
+#route to handle returning all user books that are completed
+@app.route('/book_keeper/api/user/books/completed/', methods = ['GET'])
+@auth.login_required
+def get_completed():
+
+	#find user and get their books
+	books_lookup = books.find_one({"username": request.authorization.username}, {"books": 1})
+
+	#if not found, return error
+	if books_lookup is None:
+		abort(404)
+
+	#otherwise return json of books where book is completed
+	return jsonify({'books': [book for book in books_lookup['books'] if book['completed'] == True]})
+
+#route to handle returning all user books that are in progress
+@app.route('/book_keeper/api/user/books/reading/', methods = ['GET'])
+@auth.login_required
+def get_reading():
+
+	#find user and get their books
+	books_lookup = books.find_one({"username": request.authorization.username}, {"books": 1})
+
+	#if not found, return error
+	if books_lookup is None:
+		abort(404)
+
+	#otherwise return json of books where book is not completed
+	return jsonify({'books': [book for book in books_lookup['books'] if book['completed'] == False]})
+
 
 	
 if __name__ == '__main__':
