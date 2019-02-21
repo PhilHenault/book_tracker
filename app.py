@@ -251,6 +251,21 @@ def get_completed():
 	#otherwise return json of books where book is completed
 	return jsonify({'books': [book for book in books_lookup['books'] if book['completed'] == True]})
 
+#route to handle returning all user books that are in progress
+@app.route('/book_keeper/api/user/books/reading/', methods = ['GET'])
+@auth.login_required
+def get_reading():
+
+	#find user and get their books
+	books_lookup = books.find_one({"username": request.authorization.username}, {"books": 1})
+
+	#if not found, return error
+	if books_lookup is None:
+		abort(404)
+
+	#otherwise return json of books where book is not completed
+	return jsonify({'books': [book for book in books_lookup['books'] if book['completed'] == False]})
+
 
 	
 if __name__ == '__main__':
