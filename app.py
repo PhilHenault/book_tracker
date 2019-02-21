@@ -71,7 +71,7 @@ def register():
 
 
 #get user based on username 
-@app.route('/book_keeper/api/user/<string:username>')
+@app.route('/book_keeper/api/user/<string:username>', methods=['GET'])
 def get_user(username):
 	#look up based on username 
     user = books.find_one({"username" : username})
