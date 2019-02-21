@@ -236,6 +236,22 @@ def get_book(book_id):
 	#return book found 
 	return jsonify({"book": books_lookup['books'][0]})
 
+#route to handle returning all user books that are completed
+@app.route('/book_keeper/api/user/books/completed/', methods = ['GET'])
+@auth.login_required
+def get_completed():
+
+	#find user and get their books
+	books_lookup = books.find_one({"username": request.authorization.username}, {"books": 1})
+
+	#if not found, return error
+	if books_lookup is None:
+		abort(404)
+
+	#otherwise return json of books where book is completed
+	return jsonify({'books': [book for book in books_lookup['books'] if book['completed'] == True]})
+
+
 	
 if __name__ == '__main__':
     app.secret_key = config.secret_key
